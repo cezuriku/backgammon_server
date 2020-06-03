@@ -1,0 +1,15 @@
+{application, backgammon_server,
+ [{description, "An OTP application"},
+  {vsn, "0.1.0"},
+  {registered, []},
+  {mod, {backgammon_server_app, []}},
+  {applications,
+   [kernel,
+    stdlib
+   ]},
+  {env,[]},
+  {modules, []},
+
+  {licenses, ["GPL v3"]},
+  {links, []}
+ ]}.

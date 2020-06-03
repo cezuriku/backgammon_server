@@ -1,0 +1,6 @@
+-sname backgammon_server
+
+-setcookie backgammon_server_cookie
+
++K true
++A30
