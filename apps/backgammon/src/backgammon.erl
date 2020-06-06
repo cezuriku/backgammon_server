@@ -73,14 +73,10 @@ turn(User, {_Dices, Moves}, State, NukState) when is_list(Moves) ->
     #{board := Board} = StatePublic = nuk_game_engine_state:get_public(State),
     #{color := Color} =
         nuk_game_engine_state:get_player(State, nuk_user:get_username(User)),
-    [Move | _] = Moves,
-    {Origin, Target} = Move,
-    {ok, BoardNew1} = valid_origin(Board, Origin, Color),
-    {ok, BoardNew2} = valid_target(BoardNew1, Target, Color),
+    BoardNew = apply_moves(Board, Moves, Color),
     NextTurns = lists:delete(User, nuk_game_state:get_players(NukState)),
-    NukStateNew =
-        nuk_game_engine_state:set_public(NukState, StatePublic#{board := BoardNew2}),
-    {ok, await_turn, NextTurns, NukStateNew};
+    StateNew = nuk_game_engine_state:set_public(State, StatePublic#{board := BoardNew}),
+    {ok, await_turn, NextTurns, StateNew};
 turn(_User, _Turn, _State, _NukState) ->
     {error, invalid_turn, "Invalid"}.
 
@@ -104,7 +100,7 @@ valid_origin(Board, Pos, Color) when is_integer(Pos) ->
         #{Pos := {Color, 1}} ->
             {ok, maps:remove(Pos, Board)};
         #{Pos := {Color, Nb}} ->
-            {ok, Board#{Pos := Nb - 1}};
+            {ok, Board#{Pos := {Color, Nb - 1}}};
         _ ->
             error
     end.
@@ -112,7 +108,7 @@ valid_origin(Board, Pos, Color) when is_integer(Pos) ->
 valid_target(#{off := Off} = Board, off, Color) ->
     Nb = maps:get(Color, Off, 0) + 1,
     {ok, Board#{off => Off#{Color => Nb}}};
-valid_target(Board, Pos, Color) ->
+valid_target(Board, Pos, Color) when is_integer(Pos) ->
     case Board of
         #{Pos := {Color, Nb}} ->
             {ok, Board#{Pos => {Color, Nb + 1}}};
@@ -120,5 +116,13 @@ valid_target(Board, Pos, Color) ->
             Nb = maps:get(OppositeColor, Off, 0) + 1,
             {ok, Board#{off => Off#{OppositeColor => Nb}, Pos => {Color, 1}}};
         _ ->
-            error
+            {ok, Board#{Pos => {Color, 1}}}
     end.
+
+apply_moves(Board, [Move | OtherMoves], Color) ->
+    {Origin, Target} = Move,
+    {ok, BoardNew1} = valid_origin(Board, Origin, Color),
+    {ok, BoardNew2} = valid_target(BoardNew1, Target, Color),
+    apply_moves(BoardNew2, OtherMoves, Color);
+apply_moves(Board, [], _Color) ->
+    Board.
