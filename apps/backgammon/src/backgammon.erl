@@ -67,7 +67,7 @@ player_leave(User, State, NukState) ->
 
 start(State, NukState) ->
     {ok, await_turn,
-        lists:nth(rand:uniform(2), nuk_game_state:get_players(NukState)), State}.
+        [lists:nth(rand:uniform(2), nuk_game_state:get_players(NukState))], State}.
 
 turn(User, {_Dices, Moves}, State, NukState) when is_list(Moves) ->
     #{board := Board} = StatePublic = nuk_game_engine_state:get_public(State),
