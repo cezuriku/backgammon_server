@@ -15,7 +15,8 @@
 
 %% Tests
 -export([
-    backgammon_game_register_get/1
+    backgammon_game_register_get/1,
+    backgammon_game_start_with_options_invalid/1
 ]).
 
 %%====================================================================
@@ -23,7 +24,8 @@
 %%====================================================================
 all() ->
     [
-        backgammon_game_register_get
+        backgammon_game_register_get,
+        backgammon_game_start_with_options_invalid
     ].
 
 init_per_suite(Config) ->
@@ -47,3 +49,17 @@ backgammon_game_register_get(_) ->
     Game = nuk_game:new("Backgammon", backgammon, 1, 1),
     ok = nuk_games:register(Game),
     {ok, Game} = nuk_games:get("Backgammon").
+
+backgammon_game_start_with_options_invalid(_) ->
+    % register game
+    Game = nuk_game:new("Backgammon", backgammon, 1, 1),
+    ok = nuk_games:register(Game),
+
+    % create and login user
+    User1 = nuk_user:new("User1", "Pass1"),
+    ok = nuk_users:put(User1),
+    {ok, UserSessionId1} = nuk_users:login("User1", "Pass1"),
+
+    % create a game with an invalid option
+    {error, invalid_options, _} =
+        nuk_games:create(UserSessionId1, "Backgammon", [{foo, "bar"}]).
